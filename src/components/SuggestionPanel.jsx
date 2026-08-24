@@ -3,12 +3,10 @@ export default function SuggestionPanel({ runningLow, seasonal, substituteFor, s
   if (!hasAny) return null
 
   return (
-    <div className="suggestions">
+    <div className="panel suggestions">
       {substituteFor && substitutes.length > 0 && (
         <div className="suggestions__row suggestions__row--alert">
-          <span className="suggestions__label">
-            Out of {substituteFor}? Try instead:
-          </span>
+          <span className="suggestions__label">Out of {substituteFor}? Try instead</span>
           <div className="chip-row">
             {substitutes.map(name => (
               <button key={name} className="chip chip--alt" onClick={() => onAdd(name)}>+ {name}</button>
@@ -20,7 +18,7 @@ export default function SuggestionPanel({ runningLow, seasonal, substituteFor, s
 
       {runningLow.length > 0 && (
         <div className="suggestions__row">
-          <span className="suggestions__label">Looks like you're running low on:</span>
+          <span className="suggestions__label">Running low on</span>
           <div className="chip-row">
             {runningLow.map(name => (
               <button key={name} className="chip" onClick={() => onAdd(name)}>+ {name}</button>
@@ -31,7 +29,7 @@ export default function SuggestionPanel({ runningLow, seasonal, substituteFor, s
 
       {seasonal.length > 0 && (
         <div className="suggestions__row">
-          <span className="suggestions__label">In season right now:</span>
+          <span className="suggestions__label">In season now</span>
           <div className="chip-row">
             {seasonal.map(name => (
               <button key={name} className="chip chip--seasonal" onClick={() => onAdd(name)}>+ {name}</button>

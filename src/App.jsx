@@ -6,6 +6,7 @@ import SearchBar from './components/SearchBar'
 import { parseCommand } from './utils/nlp'
 import { PRODUCTS } from './utils/products'
 import { getRunningLowSuggestions, getSeasonalSuggestions, getSubstitutes } from './utils/suggestions'
+import { exportReceipt, calculateTotal, formatINR } from './utils/export'
 
 const LIST_KEY = 'vsa_list_v1'
 const HISTORY_KEY = 'vsa_history_v1'
@@ -50,6 +51,8 @@ export default function App() {
     () => (substituteFor ? getSubstitutes(substituteFor) : []),
     [substituteFor]
   )
+  const total = useMemo(() => calculateTotal(list), [list])
+  const itemCount = useMemo(() => list.reduce((s, i) => s + i.quantity, 0), [list])
 
   function addItem(name, quantity = 1) {
     if (!name) return
@@ -68,6 +71,7 @@ export default function App() {
           name,
           quantity,
           category: meta?.category || 'Other',
+          price: meta?.price || 0,
         },
       ]
     })
@@ -94,8 +98,6 @@ export default function App() {
     setProcessing(true)
     setLastTranscript(transcript)
 
-    // Simulated brief processing delay so the loading state is visible —
-    // parsing itself is synchronous and near-instant.
     setTimeout(() => {
       const { intent, item, quantity, priceFilter } = parseCommand(transcript)
 
@@ -129,61 +131,78 @@ export default function App() {
   }
 
   return (
-    <div className="app">
-      <header className="app__header">
-        <div className="app__brand">
+    <div className="page">
+      <header className="topbar">
+        <div className="topbar__brand">
           <span className="app__brand-mark">🛺</span>
           <div>
             <h1>Basket</h1>
-            <p className="app__tagline">Say it, and it's on the list.</p>
+            <p className="topbar__tagline">Say it, and it's on the list.</p>
           </div>
+        </div>
+        <div className="topbar__summary">
+          <span className="topbar__summary-count">{itemCount} item{itemCount !== 1 ? 's' : ''}</span>
+          <span className="topbar__summary-total">{formatINR(total)}</span>
         </div>
       </header>
 
-      <main className="app__main">
-        <VoiceButton onResult={handleVoiceResult} onError={handleVoiceError} />
+      <div className="layout">
+        <aside className="sidebar">
+          <section className="panel voice-card">
+            <VoiceButton onResult={handleVoiceResult} onError={handleVoiceError} />
 
-        <div className="feedback-zone" aria-live="polite">
-          {processing && <p className="feedback feedback--loading">Processing…</p>}
-          {!processing && lastTranscript && !error && (
-            <p className="feedback feedback--heard">Heard: "{lastTranscript}"</p>
-          )}
-          {error && <p className="feedback feedback--error">{error}</p>}
-        </div>
+            <div className="feedback-zone" aria-live="polite">
+              {processing && (
+                <p className="feedback feedback--loading"><span className="feedback__dot" />Processing…</p>
+              )}
+              {!processing && lastTranscript && !error && (
+                <p className="feedback feedback--heard">"{lastTranscript}"</p>
+              )}
+              {error && <p className="feedback feedback--error">{error}</p>}
+            </div>
+          </section>
 
-        <SearchBar
-          query={searchQuery}
-          priceFilter={searchFilter}
-          onAdd={(name) => addItem(name, 1)}
-          onClear={() => { setSearchQuery(''); setSearchFilter(null) }}
-        />
+          <ManualAdd onAdd={addItem} />
 
-        <SuggestionPanel
-          runningLow={runningLow}
-          seasonal={seasonal}
-          substituteFor={substituteFor}
-          substitutes={substitutes}
-          onAdd={(name) => addItem(name, 1)}
-          onDismissSubstitute={() => setSubstituteFor(null)}
-        />
+          <SuggestionPanel
+            runningLow={runningLow}
+            seasonal={seasonal}
+            substituteFor={substituteFor}
+            substitutes={substitutes}
+            onAdd={(name) => addItem(name, 1)}
+            onDismissSubstitute={() => setSubstituteFor(null)}
+          />
+        </aside>
 
-        <ShoppingList items={list} onRemove={removeItem} />
+        <main className="content">
+          <SearchBar
+            query={searchQuery}
+            priceFilter={searchFilter}
+            onAdd={(name) => addItem(name, 1)}
+            onClear={() => { setSearchQuery(''); setSearchFilter(null) }}
+          />
 
-        <ManualAdd onAdd={addItem} />
-      </main>
+          <ShoppingList
+            items={list}
+            onRemove={removeItem}
+            onExport={() => {
+              exportReceipt(list)
+              setToast('List exported')
+            }}
+          />
+        </main>
+      </div>
 
       {toast && <div className="toast">{toast}</div>}
     </div>
   )
 }
 
-// Text fallback so the app is usable without a microphone / on unsupported
-// browsers, and so reviewers can test without speaking.
 function ManualAdd({ onAdd }) {
   const [value, setValue] = useState('')
   return (
     <form
-      className="manual-add"
+      className="panel manual-add"
       onSubmit={(e) => {
         e.preventDefault()
         if (value.trim()) {
