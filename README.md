@@ -4,7 +4,7 @@ A voice-driven shopping list manager built as a client-only React app. Speak
 a command, and it's parsed, categorized, and added to your list — with
 smart suggestions along the way.
 
-**Live app:** _add your deployed URL here_
+**Live app:** [_add your deployed URL here_](https://pantry-pulse-voice-shopping-assista.vercel.app)
 **Repo:** _add your GitHub URL here_
 
 ## Features implemented
