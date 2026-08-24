@@ -5,7 +5,7 @@ a command, and it's parsed, categorized, and added to your list — with
 smart suggestions along the way.
 
 **Live app:** (https://pantry-pulse-voice-shopping-assista.vercel.app)
-**Repo:** _add your GitHub URL here_
+**Repo:** https://github.com/SREELAKSHMI079/pantry-pulse-voice-shopping-assistant
 
 ## Features implemented
 
